@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Bank ATM</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#1d2229;--steel1:#aab3bd;--steel2:#6f7985;--ink:#14181d;--screen:#0d2540;--screen2:#15375c;
+--text:#eaf1f8;--mute:#9db3c9;--amber:#f2b441;--ok:#8fe0ae;--err:#ff9a9a;--line:#2c4d73}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;align-content:center;gap:14px;padding:24px 12px;background:var(--bg);
+font:16px/1.4 "IBM Plex Sans",system-ui,"Segoe UI",sans-serif;color:var(--text)}
+.atm{width:min(100%,540px);padding:18px;border-radius:22px;background:linear-gradient(160deg,var(--steel1),var(--steel2));
+box-shadow:0 30px 60px #0009,inset 0 2px 0 #fff6}
+.plate{display:flex;justify-content:space-between;align-items:center;padding:2px 8px 14px;color:var(--ink);font-weight:700;font-size:20px;letter-spacing:.03em}
+.led{width:12px;height:12px;border-radius:50%;background:#4b535c;box-shadow:inset 0 1px 2px #0009;transition:background .3s,box-shadow .3s}
+.led.on{background:#46d17a;box-shadow:0 0 10px #46d17a}.led.adm{background:var(--amber);box-shadow:0 0 10px var(--amber)}
+.screen{min-height:350px;max-height:470px;overflow:auto;padding:20px;border:10px solid #20252b;border-radius:12px;
+background:linear-gradient(180deg,var(--screen2),var(--screen));box-shadow:inset 0 0 40px #0009}
+h1,h2{margin:0 0 6px;font-weight:600}h1{font-size:24px}h2{font-size:20px}
+.hint{margin:0 0 14px;color:var(--mute);font-size:14px}
+label{display:block;margin:10px 0 4px;color:var(--mute);font-size:14px}
+input{width:100%;padding:11px 12px;border-radius:8px;border:1px solid #3d5f86;background:#0a1f36;color:var(--text);
+font:600 20px "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.08em}
+input[type=text]{letter-spacing:.02em;font-size:17px}
+input:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.btn{padding:11px 14px;border:0;border-radius:8px;background:var(--amber);color:#2a1d00;font:700 15px "IBM Plex Sans",sans-serif;cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid #4a6f99}
+.btn.sm{padding:5px 9px;font-size:12px}
+.row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}.row .btn{flex:1}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.grid .btn{text-align:left;padding:14px}
+.msg{margin:0 0 12px;padding:9px 12px;border-radius:8px;border-left:4px solid;background:#0a1f36;font-size:14px}
+.msg.ok{border-color:var(--ok);color:var(--ok)}.msg.err{border-color:var(--err);color:var(--err)}
+.big{margin:0;font:600 34px "IBM Plex Mono",ui-monospace,monospace}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chip{padding:7px 12px;border-radius:999px;border:1px solid #4a6f99;background:transparent;color:var(--text);font:600 14px "IBM Plex Mono",monospace;cursor:pointer}
+.chip:hover{background:#1d4a78}
+.stmt{margin:0;padding:0;list-style:none;font:500 12.5px/1.9 "IBM Plex Mono",monospace}
+.stmt li{border-bottom:1px dashed var(--line)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--mute);font-weight:600;text-align:left}th,td{padding:7px 4px;border-bottom:1px solid var(--line);vertical-align:middle}
+td small{color:var(--mute)}.blocked{color:var(--err)}
+.mini{width:84px;padding:5px 6px;font-size:13px;letter-spacing:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 4px}
+.key{padding:13px 0;border:0;border-radius:8px;background:linear-gradient(#3a424c,#262c33);color:#eef2f6;font:600 18px "IBM Plex Mono",monospace;
+box-shadow:0 3px 0 #101418;cursor:pointer}
+.key:active{transform:translateY(2px);box-shadow:0 1px 0 #101418}
+.key.act{font:700 12px "IBM Plex Sans",sans-serif}.key.enter{grid-row:span 2;background:linear-gradient(#3f8f5f,#2a6b45)}
+.key.clear{background:linear-gradient(#b08a2e,#85661c)}.key.cancel{background:linear-gradient(#a24a4a,#763131)}
+.slots{display:flex;gap:14px;align-items:center;margin-top:14px}
+.cardslot{flex:1;height:10px;border-radius:5px;background:var(--ink);box-shadow:inset 0 2px 3px #000,0 1px 0 #fff5}
+.cashslot{flex:1.4;height:22px;border-radius:4px;background:var(--ink);box-shadow:inset 0 3px 4px #000,0 1px 0 #fff5}
+.staff{background:none;border:0;color:var(--mute);font:14px "IBM Plex Sans",sans-serif;text-decoration:underline;cursor:pointer}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="atm">
+  <div class="plate"><span>MY BANK</span><span class="led" id="led" title="Card status"></span></div>
+  <section class="screen" id="screen" aria-live="polite"></section>
+  <section class="keypad" id="keypad" aria-label="Keypad"></section>
+  <div class="slots"><div class="cardslot"></div><div class="cashslot"></div></div>
+</main>
+<button class="staff" id="staff">Bank staff sign-in</button>
+
+<script>
+// When opened from the server (http://localhost:8080) BASE is empty; if index.html is opened as a file, call the server directly.
+const BASE = location.protocol === 'file:' ? 'http://localhost:8080' : '';
+const S = {token:null, card:'', info:null, flash:null, target:null};
+const $ = s => document.querySelector(s), screen = $('#screen');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const rs = n => 'Rs. ' + Number(n).toLocaleString('en-IN');
+
+async function api(path, data = {}) {
+  try {
+    const r = await fetch(BASE + path, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({token:S.token, ...data})});
+    return await r.json();
+  } catch (e) { return {ok:false, msg:'Cannot reach the ATM server. Start atm_server and reload this page.'}; }
+}
+const flash = (ok, msg) => S.flash = {ok, msg};
+function show(html, mode) {
+  const f = S.flash; S.flash = null;
+  screen.innerHTML = (f ? `<p class="msg ${f.ok ? 'ok' : 'err'}" role="status">${esc(f.msg)}</p>` : '') + html;
+  $('#led').className = 'led ' + (mode || (S.token ? 'on' : ''));
+  const i = screen.querySelector('input'); if (i) { i.focus(); S.target = i; }
+}
+
+/* ---------- Customer screens ---------- */
+function home() {
+  S.token = null; S.info = null;
+  show(`<h1>Insert your card</h1><p class="hint">Type your card number. Demo cards: 1111, 2222, 3333.</p>
+  <form data-form="card"><label for="c">Card number</label><input id="c" name="card" type="text" inputmode="numeric" autocomplete="off">
+  <div class="row"><button class="btn">Insert card</button></div></form>`);
+}
+function pinView() {
+  show(`<h2>Enter your PIN</h2><p class="hint">Card ${esc(S.card)}</p>
+  <form data-form="pin"><label for="p">4-digit PIN</label><input id="p" name="pin" type="password" maxlength="4" inputmode="numeric" autocomplete="off">
+  <div class="row"><button class="btn">Verify PIN</button><button type="button" class="btn ghost" data-go="home">Use another card</button></div></form>`);
+}
+async function menu() {
+  const r = await api('/api/info');
+  if (!r.ok) { flash(false, r.msg); return home(); }
+  S.info = r;
+  show(`<h2>Hello, ${esc(r.name)}</h2><p class="hint">Available balance</p><p class="big">${rs(r.balance)}</p>
+  <p class="hint">You can still withdraw ${rs(r.remaining)} today (limit ${rs(r.dailyLimit)}).</p>
+  <div class="grid"><button class="btn" data-go="withdraw">Withdraw cash</button><button class="btn" data-go="deposit">Deposit cash</button>
+  <button class="btn" data-go="statement">Mini statement</button><button class="btn" data-go="changepin">Change PIN</button></div>
+  <div class="row"><button class="btn ghost" data-go="eject">Eject card</button></div>`);
+}
+function amountView(kind, msg) {
+  const w = kind === 'withdraw', amts = w ? [500,1000,2000,5000,10000] : [500,1000,5000,10000];
+  show(`<h2>${w ? 'Withdraw cash' : 'Deposit cash'}</h2>
+  <p class="hint">${w ? `Multiples of 100. You can withdraw ${rs(S.info.remaining)} more today.` : 'Enter the amount you are depositing.'}</p>
+  <div class="chips">${amts.map(a => `<button type="button" class="chip" data-go="fill" data-v="${a}">${a}</button>`).join('')}</div>
+  <form data-form="${kind}"><label for="a">Amount (Rs.)</label><input id="a" name="amount" type="text" inputmode="numeric" autocomplete="off">
+  <div class="row"><button class="btn">${w ? 'Withdraw' : 'Deposit'}</button><button type="button" class="btn ghost" data-go="menu">Back to menu</button></div></form>`);
+}
+function changePinView() {
+  show(`<h2>Change PIN</h2><p class="hint">Choose a new 4-digit PIN.</p>
+  <form data-form="changepin"><div class="two"><div><label for="o">Current PIN</label><input id="o" name="oldPin" type="password" maxlength="4" inputmode="numeric"></div>
+  <div><label for="n">New PIN</label><input id="n" name="newPin" type="password" maxlength="4" inputmode="numeric"></div></div>
+  <div class="row"><button class="btn">Save new PIN</button><button type="button" class="btn ghost" data-go="menu">Back to menu</button></div></form>`);
+}
+async function statementView() {
+  const r = await api('/api/statement');
+  if (!r.ok) { flash(false, r.msg); return home(); }
+  show(`<h2>Mini statement</h2><p class="hint">Your last 5 transactions</p>
+  ${r.items.length ? `<ul class="stmt">${r.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : '<p class="hint">No transactions yet. Deposit or withdraw to see them here.</p>'}
+  <p class="hint" style="margin-top:12px">Balance: ${rs(r.balance)}</p>
+  <div class="row"><button class="btn ghost" data-go="menu">Back to menu</button></div>`);
+}
+
+/* ---------- Admin screens ---------- */
+function adminLogin() {
+  show(`<h2>Bank staff sign-in</h2><p class="hint">Enter your admin credentials.</p>
+  <form data-form="adminlogin"><label for="u">Username</label><input id="u" name="username" type="text" autocomplete="off">
+  <label for="pw">Password</label><input id="pw" name="password" type="password" autocomplete="off">
+  <div class="row"><button class="btn">Sign in</button><button type="button" class="btn ghost" data-go="home">Cancel</button></div></form>`, 'adm');
+}
+async function adminPanel() {
+  const r = await api('/api/admin/users');
+  if (!r.ok) { flash(false, r.msg); return home(); }
+  show(`<h2>Accounts</h2>
+  <table><tr><th>Customer</th><th>Balance</th><th>Daily limit</th><th>Card</th></tr>
+  ${r.users.map(u => `<tr><td>${esc(u.name)}<br><small>${esc(u.card)}</small></td><td>${rs(u.balance)}</td>
+  <td><input class="mini" type="text" inputmode="numeric" data-limit="${esc(u.card)}" value="${u.limit}" aria-label="Daily limit for ${esc(u.name)}">
+  <button class="btn sm" data-go="setlimit" data-card="${esc(u.card)}">Save</button></td>
+  <td>${u.blocked ? `<span class="blocked">Blocked</span><br><button class="btn sm" data-go="unblock" data-card="${esc(u.card)}">Unblock</button>` : 'Active'}</td></tr>`).join('')}</table>
+  <h2 style="margin-top:18px">Add customer</h2>
+  <form data-form="adduser"><div class="two"><div><label for="an">Name</label><input id="an" name="name" type="text" autocomplete="off"></div>
+  <div><label for="ac">Card number</label><input id="ac" name="card" type="text" autocomplete="off"></div>
+  <div><label for="ap">4-digit PIN</label><input id="ap" name="pin" type="text" maxlength="4" autocomplete="off"></div>
+  <div><label for="ab">Opening balance</label><input id="ab" name="balance" type="text" autocomplete="off"></div></div>
+  <div class="row"><button class="btn">Create account</button><button type="button" class="btn ghost" data-go="adminout">Sign out</button></div></form>`, 'adm');
+}
+
+/* ---------- Actions ---------- */
+const go = {
+  home, menu, fill: d => { if (S.target) { S.target.value = d.v; S.target.focus(); } },
+  withdraw: () => amountView('withdraw'), deposit: () => amountView('deposit'),
+  changepin: changePinView, statement: statementView,
+  eject: async () => { await api('/api/logout'); flash(true, 'Card ejected. Thank you for banking with us.'); home(); },
+  adminout: async () => { await api('/api/logout'); flash(true, 'Signed out.'); home(); },
+  unblock: async d => { const r = await api('/api/admin/unblock', {card:d.card}); flash(r.ok, r.msg); adminPanel(); },
+  setlimit: async d => {
+    const v = screen.querySelector(`input[data-limit="${d.card}"]`).value;
+    const r = await api('/api/admin/setlimit', {card:d.card, limit:v}); flash(r.ok, r.msg); adminPanel();
+  }
+};
+const forms = {
+  card: d => { if (!d.card.trim()) { flash(false, 'Enter your card number.'); return home(); } S.card = d.card.trim(); pinView(); },
+  pin: async d => {
+    const r = await api('/api/login', {card:S.card, pin:d.pin});
+    if (r.ok) { S.token = r.token; return menu(); }
+    flash(false, r.msg); r.blocked ? home() : pinView();
+  },
+  deposit: async d => txn('deposit', d), withdraw: async d => txn('withdraw', d),
+  changepin: async d => { const r = await api('/api/changepin', d); flash(r.ok, r.msg); r.ok ? menu() : changePinView(); },
+  adminlogin: async d => {
+    const r = await api('/api/admin/login', d);
+    if (r.ok) { S.token = r.token; flash(true, r.msg); return adminPanel(); }
+    flash(false, r.msg); adminLogin();
+  },
+  adduser: async d => { const r = await api('/api/admin/adduser', d); flash(r.ok, r.msg); adminPanel(); }
+};
+async function txn(kind, d) {
+  const r = await api('/api/' + kind, d);
+  flash(r.ok, r.msg);
+  if (r.ok) menu(); else { if (r.remaining !== undefined) S.info = r; amountView(kind); }
+}
+screen.addEventListener('submit', e => { e.preventDefault(); const h = forms[e.target.dataset.form]; if (h) h(Object.fromEntries(new FormData(e.target))); });
+screen.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b && go[b.dataset.go]) go[b.dataset.go](b.dataset); });
+screen.addEventListener('focusin', e => { if (e.target.matches('input')) S.target = e.target; });
+$('#staff').addEventListener('click', adminLogin);
+
+/* ---------- On-screen keypad (types into the focused field) ---------- */
+const keys = ['1','2','3','Cancel','4','5','6','Clear','7','8','9','Enter','⌫','0','00'];
+$('#keypad').innerHTML = keys.map(k => {
+  const cls = k === 'Enter' ? 'key act enter' : k === 'Clear' ? 'key act clear' : k === 'Cancel' ? 'key act cancel' : 'key';
+  return `<button type="button" class="${cls}" data-k="${k}">${k}</button>`;
+}).join('');
+$('#keypad').addEventListener('mousedown', e => e.preventDefault());   // keep focus in the input
+$('#keypad').addEventListener('click', e => {
+  const k = e.target.closest('[data-k]')?.dataset.k, t = S.target;
+  if (!k) return;
+  if (k === 'Cancel') return S.token ? go.eject() : home();
+  if (!t || !document.contains(t)) return;
+  if (k === 'Clear') t.value = '';
+  else if (k === '⌫') t.value = t.value.slice(0, -1);
+  else if (k === 'Enter') t.form && t.form.requestSubmit();
+  else if (!t.maxLength || t.maxLength < 0 || t.value.length + k.length <= t.maxLength) t.value += k;
+  t.focus();
+});
+
+home();
+</script>
+</body>
+</html>
